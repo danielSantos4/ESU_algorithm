@@ -1,64 +1,71 @@
-#Read the entries for a graph
-#Using adjacence list
+import copy
+
+# Read the entries for the graph in graph.txt archive
+# Using a adjacence list for representation
 def readGraph():
     graph = []
-    for i in range(5):
-        x = input()
-        vertex = []
-        for i in x.split():
-            vertex.append(int(i))
-        graph.append(vertex)
-    return graph
+    k = 0
+    target = True
+
+    with open('graph.txt') as graphText:
+        for index, line in enumerate(graphText):
+            if index == 0:
+                k = int(line)
+                continue
+            if target == True:
+                adjac = []
+                for vertex in line.split():
+                    adjac.append(int(vertex))
+                graph.append(adjac)
+        print(graph)
+
+    return graph, k
+
+# Begin of the algorithm
+# Pick a random vertex of graph and put your
+# adjacences in a list for the next step of the 
+# algorithm
+def enumerateSubgraph():
+    used = []
+    for i in graph:
+        used.append(0)
+    for v in range(len(graph)):
+        vExtension = set()
+        for v_adj in graph[v]:
+            if v_adj > v:
+                vExtension.add(v_adj)
+        extendSubgraph([v], vExtension, v, used[:])
 
 
-#Initial function of ESU algorithm
-#Select the initial vertex of the list
-def enumerateSubgraph( graph, k ):
-    for indice, v in enumerate(graph):
-        vExtension = []
-        father = [-1]
-        subGraph = [indice]
-        vertexIn = [indice]
-        for u in v:
-            if u > indice:
-                twin = [u,indice]
-                vExtension.append(twin)    
-        #print(vExtension)
-        extendSubgraph(graph, subGraph, vExtension, vertexIn, father, indice, k)
+def extendSubgraph(subGraph, vExtension, v, used):
+    # Check if subGraph has size equals to k
+    # Sum 1 to the number of subGraphs founded
+    if len(subGraph) == k:
+        print("SubGraph: ",sorted(subGraph), "\n")
+        global subTotal
+        subTotal += 1
+        return
 
-
-# Recursive function to find all of the subGraphs that contains
-# the vertex k, and doesn't contain vertex < k
-def extendSubgraph(graph, subGraph, vExtension, vertexIn, father, indice, k):
-    if len(vertexIn) == k:
-        print("Encontrado: \n\t", subGraph, "\n\t", father, "\n")
-        return 
-
+    # Take a vertex of vExtension and copy all of your
+    # adjacences to a new vExtension
+    # Try to expand the subGraph with the possibilities
+    # founded in vExtension
     while len(vExtension) != 0:
-        #print("Etapa: \n\tSubGraph: ", subGraph)
-        #print("\tvExtension: ", vExtension, "\n")
+        w = vExtension.pop()
+        vExtension2 =copy.deepcopy(vExtension)
+        used[w] = -1
+        used2 = used[:]
 
-        w = vExtension.pop(0)
-        w0 = w[0]
-        w1 = w[1]
+        for u in graph[w]:
+            if u not in subGraph and u > v and used[u] == 0:
+                vExtension2.add(u)
 
-        subGraph2 = subGraph[:]
-        vExtension2 = vExtension[:]
-        father2 = father[:]
-        vertexIn2 = vertexIn[:]
+        subGraph.append(w)
+        extendSubgraph(subGraph, vExtension2, v, used2)
+        subGraph.pop(-1)
 
-        for u in graph[w0]:
-            if u not in subGraph and u > indice:
-                twin = [u, w0]
-                vExtension2.append(twin)
-        if w0 not in subGraph:
-            vertexIn2.append(w0)
+graph, k = readGraph()
+subTotal = int(0)
+enumerateSubgraph()
 
-        subGraph2.append(w0)
-        father2.append(w1)
-
-        extendSubgraph(graph, subGraph2, vExtension2, vertexIn2, father2, indice, k)
-
-# Initial call to the algorithm
-# The example is made by a graph of size 5, five vertex
-enumerateSubgraph(readGraph(), int(input()))
+print(f"Total number of subGraphs: {subTotal}")
